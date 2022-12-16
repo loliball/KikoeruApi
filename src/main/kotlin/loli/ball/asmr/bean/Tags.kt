@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 interface QueryAble {
     fun query(): String
+    fun name(): String
 }
 
 @Serializable
@@ -13,6 +14,7 @@ data class Circle(
     val name: String
 ) : QueryAble {
     override fun query() = "circles/$id"
+    override fun name() = name
 }
 
 @Serializable
@@ -37,6 +39,8 @@ data class Tag(
 
     override fun query() = "tags/$id"
 
+    override fun name() = name.orEmpty()
+
 }
 
 @Serializable
@@ -47,5 +51,7 @@ data class Va(
 ): QueryAble {
 
     override fun query() = "vas/$id"
+
+    override fun name() = name
 
 }
