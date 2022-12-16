@@ -16,6 +16,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.net.URLEncoder
 
 
 object AsmrOneApi {
@@ -75,6 +76,27 @@ object AsmrOneApi {
         val url0 = if (extra == null) {
             "$ASMR_BASE_URL/api/works"
         } else "$ASMR_BASE_URL/api/${extra.query()}/works"
+        val url = url0.toHttpUrl().newBuilder().apply {
+            addQueryParameter("order", order.name)
+            addQueryParameter("sort", sort.name)
+            addQueryParameter("page", page.toString())
+            addQueryParameter("seed", seed.toString())
+            addQueryParameter("subtitle", (if (subtitle) 1 else 0).toString())
+        }.build().toString()
+        return request(url, token)
+    }
+
+    // 搜索
+    fun search(
+        token: String,
+        page: Int,
+        keyword: String,
+        order: WorksOrder = WorksOrder.create_date,
+        sort: QuerySort = QuerySort.desc,
+        seed: Int = (0..100).random(),
+        subtitle: Boolean = false, // 是否有字幕
+    ): Result<Works> {
+        val url0 = "$ASMR_BASE_URL/api/search/${keyword.toUrlEncoded()}"
         val url = url0.toHttpUrl().newBuilder().apply {
             addQueryParameter("order", order.name)
             addQueryParameter("sort", sort.name)
@@ -188,6 +210,8 @@ object AsmrOneApi {
             response.body!!.string()
         }
     }
+
+    private fun String.toUrlEncoded(): String = URLEncoder.encode(this, Charsets.UTF_8.displayName())
 
 }
 
