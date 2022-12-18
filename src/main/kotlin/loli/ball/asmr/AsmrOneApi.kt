@@ -4,9 +4,7 @@ package loli.ball.asmr
 
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
@@ -56,8 +54,9 @@ object AsmrOneApi {
         val newCall = client.newCall(Request.Builder().url(url).post(body).build())
         return kotlin.runCatching {
             val response = newCall.execute()
-            check(response.code == 200) { "http code ${response.code}" }
+//            check(response.code == 200) { "http code ${response.code}" }
             val resp = response.body!!.string()
+            check(response.code == 200) { resp }
             val json = Json.parseToJsonElement(resp).jsonObject
             json["token"]?.jsonPrimitive?.content ?: error(resp)
         }
@@ -157,8 +156,9 @@ object AsmrOneApi {
             .build()
         return runCatching {
             val response = client.newCall(request).execute()
-            check(response.code == 200) { "http code ${response.code}" }
             val bodyString = response.body!!.string()
+//            check(response.code == 200) { "http code ${response.code} $bodyString" }
+            check(response.code == 200) { bodyString }
             json.decodeFromString(bodyString)
         }
     }
@@ -175,23 +175,28 @@ object AsmrOneApi {
             error("progress, rating, review_text all null")
         }
         val body = Json.encodeToString(
-            buildMap {
-                this["progress"] = progress?.name
-                this["rating"] = rating?.toString()
-                this["review_text"] = review_text
-                this["user_name"] = user_name
-                this["work_id"] = work_id.toString()
-            }.filterValues { it != null }
+            JsonObject(
+                mapOf(
+                    "progress" to JsonPrimitive(progress?.name),
+                    "rating" to JsonPrimitive(rating),
+                    "review_text" to JsonPrimitive(review_text),
+                    "user_name" to JsonPrimitive(user_name),
+                    "work_id" to JsonPrimitive(work_id)
+                ).filterValues { it != JsonNull }
+            )
         ).toRequestBody("application/json".toMediaTypeOrNull())
+        val starOnly = progress == null && rating != null && review_text == null
+        val progressOnly = progress != null && rating == null && review_text == null
         val request = Request.Builder()
-            .url("$ASMR_BASE_URL/api/review?starOnly=false")
+            .url("$ASMR_BASE_URL/api/review?starOnly=$starOnly&progressOnly=$progressOnly")
             .header("authorization", "Bearer $token")
             .put(body)
             .build()
         return runCatching {
             val response = client.newCall(request).execute()
-            check(response.code == 200) { "http code ${response.code}" }
-            response.body!!.string()
+            val string = response.body!!.string()
+//            check(response.code == 200) { "http code ${response.code} $string" }
+            string
         }
     }
 
@@ -206,7 +211,7 @@ object AsmrOneApi {
             .build()
         return runCatching {
             val response = client.newCall(request).execute()
-            check(response.code == 200) { "http code ${response.code}" }
+//            check(response.code == 200) { "http code ${response.code}" }
             response.body!!.string()
         }
     }
