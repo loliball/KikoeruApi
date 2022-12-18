@@ -34,12 +34,15 @@ data class Work(
     val rate_count_detail: List<RateCountDetail>,
     val release: String,
     val review_count: Int,
+    val review_text: String? = null,
     val samCoverUrl: String,
     val tags: List<Tag>,
     val thumbnailCoverUrl: String,
     val title: String,
     val userRating: Int? = null,
-    val vas: List<Va>
+    val vas: List<Va>,
+    val user_name: String? = null,
+    val updated_at: String? = null
 ) {
 
     @Serializable
