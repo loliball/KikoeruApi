@@ -9,6 +9,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import loli.ball.asmr.bean.*
+import okhttp3.CacheControl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -51,7 +52,7 @@ object AsmrOneApi {
                 "password" to password
             )
         ).toRequestBody("application/json".toMediaTypeOrNull())
-        val newCall = client.newCall(Request.Builder().url(url).post(body).build())
+        val newCall = client.newCall(Request.Builder().url(url).cacheControl(CacheControl.FORCE_NETWORK).post(body).build())
         return kotlin.runCatching {
             val response = newCall.execute()
 //            check(response.code == 200) { "http code ${response.code}" }
@@ -70,7 +71,8 @@ object AsmrOneApi {
         sort: QuerySort = QuerySort.desc,
         seed: Int = (0..100).random(),
         subtitle: Boolean = false, // 是否有字幕
-        extra: QueryAble? = null // 额外特殊的检索标签
+        extra: QueryAble? = null, // 额外特殊的检索标签
+        noCache: Boolean = false
     ): Result<Works> {
         val url0 = if (extra == null) {
             "$ASMR_BASE_URL/api/works"
@@ -82,7 +84,7 @@ object AsmrOneApi {
             addQueryParameter("seed", seed.toString())
             addQueryParameter("subtitle", (if (subtitle) 1 else 0).toString())
         }.build().toString()
-        return request(url, token)
+        return request(url, token, noCache)
     }
 
     // 搜索
@@ -94,6 +96,7 @@ object AsmrOneApi {
         sort: QuerySort = QuerySort.desc,
         seed: Int = (0..100).random(),
         subtitle: Boolean = false, // 是否有字幕
+        noCache: Boolean = false
     ): Result<Works> {
         val url0 = "$ASMR_BASE_URL/api/search/${keyword.toUrlEncoded()}"
         val url = url0.toHttpUrl().newBuilder().apply {
@@ -103,7 +106,7 @@ object AsmrOneApi {
             addQueryParameter("seed", seed.toString())
             addQueryParameter("subtitle", (if (subtitle) 1 else 0).toString())
         }.build().toString()
-        return request(url, token)
+        return request(url, token, noCache)
     }
 
     // 收藏页面
@@ -112,7 +115,8 @@ object AsmrOneApi {
         page: Int,
         order: ReviewOrder = ReviewOrder.updated_at,
         sort: QuerySort = QuerySort.desc,
-        filter: ListenState? = null
+        filter: ListenState? = null,
+        noCache: Boolean = false
     ): Result<Works> {
         val url = "$ASMR_BASE_URL/api/review".toHttpUrl().newBuilder().apply {
             addQueryParameter("order", order.name)
@@ -122,37 +126,41 @@ object AsmrOneApi {
                 addQueryParameter("filter", filter.toString())
             }
         }.build().toString()
-        return request(url, token)
+        return request(url, token, noCache)
     }
 
     // 不带个人信息 RJ号直达
-    fun workInfo(token: String, id: Int): Result<Work> =
-        request("$ASMR_BASE_URL/api/workInfo/$id", token)
+    fun workInfo(token: String, id: Int, noCache: Boolean = false): Result<Work> =
+        request("$ASMR_BASE_URL/api/workInfo/$id", token, noCache)
 
     // 带个人信息 RJ号直达
-    fun work(token: String, id: Int): Result<Work> =
-        request("$ASMR_BASE_URL/api/work/$id", token)
+    fun work(token: String, id: Int, noCache: Boolean = false): Result<Work> =
+        request("$ASMR_BASE_URL/api/work/$id", token, noCache)
 
     // 详细目录 RJ号直达
-    fun tracks(token: String, id: Int): Result<List<RemoteFile>> =
-        request("$ASMR_BASE_URL/api/tracks/$id", token)
+    fun tracks(token: String, id: Int, noCache: Boolean = false): Result<List<RemoteFile>> =
+        request("$ASMR_BASE_URL/api/tracks/$id", token, noCache)
 
     // 社团
-    fun circles(token: String): Result<List<Circle>> =
-        request("$ASMR_BASE_URL/api/circles", token)
+    fun circles(token: String, noCache: Boolean = false): Result<List<Circle>> =
+        request("$ASMR_BASE_URL/api/circles", token, noCache)
 
     // 标签
-    fun tags(token: String): Result<List<Tag>> =
-        request("$ASMR_BASE_URL/api/tags", token)
+    fun tags(token: String, noCache: Boolean = false): Result<List<Tag>> =
+        request("$ASMR_BASE_URL/api/tags", token, noCache)
 
     // 声优
-    fun vas(token: String): Result<List<Va>> =
-        request("$ASMR_BASE_URL/api/vas", token)
+    fun vas(token: String, noCache: Boolean = false): Result<List<Va>> =
+        request("$ASMR_BASE_URL/api/vas", token, noCache)
 
-    private inline fun <reified R> request(url: String, token: String): Result<R> {
+    private inline fun <reified R> request(url: String, token: String, noCache: Boolean): Result<R> {
         val request = Request.Builder()
             .url(url)
             .header("authorization", "Bearer $token")
+            .let {
+                if(noCache) it.cacheControl(CacheControl.FORCE_NETWORK)
+                else it
+            }
             .build()
         return runCatching {
             val response = client.newCall(request).execute()
@@ -190,6 +198,7 @@ object AsmrOneApi {
         val request = Request.Builder()
             .url("$ASMR_BASE_URL/api/review?starOnly=$starOnly&progressOnly=$progressOnly")
             .header("authorization", "Bearer $token")
+            .cacheControl(CacheControl.FORCE_NETWORK)
             .put(body)
             .build()
         return runCatching {
@@ -207,6 +216,7 @@ object AsmrOneApi {
         val request = Request.Builder()
             .url("$ASMR_BASE_URL/api/review?work_id=$work_id")
             .header("authorization", "Bearer $token")
+            .cacheControl(CacheControl.FORCE_NETWORK)
             .delete()
             .build()
         return runCatching {
