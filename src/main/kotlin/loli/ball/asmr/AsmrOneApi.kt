@@ -52,7 +52,8 @@ object AsmrOneApi {
                 "password" to password
             )
         ).toRequestBody("application/json".toMediaTypeOrNull())
-        val newCall = client.newCall(Request.Builder().url(url).cacheControl(CacheControl.FORCE_NETWORK).post(body).build())
+        val newCall =
+            client.newCall(Request.Builder().url(url).cacheControl(CacheControl.FORCE_NETWORK).post(body).build())
         return kotlin.runCatching {
             val response = newCall.execute()
 //            check(response.code == 200) { "http code ${response.code}" }
@@ -158,7 +159,7 @@ object AsmrOneApi {
             .url(url)
             .header("authorization", "Bearer $token")
             .let {
-                if(noCache) it.cacheControl(CacheControl.FORCE_NETWORK)
+                if (noCache) it.cacheControl(CacheControl.FORCE_NETWORK)
                 else it
             }
             .build()
@@ -222,6 +223,37 @@ object AsmrOneApi {
         return runCatching {
             val response = client.newCall(request).execute()
 //            check(response.code == 200) { "http code ${response.code}" }
+            response.body!!.string()
+        }
+    }
+
+    fun checkLrc(
+        token: String,
+        hash: String
+    ): Result<String?> {
+        val request = Request.Builder()
+            .url("$ASMR_BASE_URL/api/media/check-lrc/$hash")
+            .header("authorization", "Bearer $token")
+            .get()
+            .build()
+        return kotlin.runCatching {
+            val response = client.newCall(request).execute().body!!.string()
+            val lrcHash = Json.parseToJsonElement(response).jsonObject["hash"]?.jsonPrimitive?.content
+            if (lrcHash.isNullOrEmpty()) null else lrcHash
+        }
+    }
+
+    fun downloadLrc(
+        token: String,
+        hash: String
+    ): Result<String> {
+        val request = Request.Builder()
+            .url("$ASMR_BASE_URL/api/media/stream/$hash")
+            .header("authorization", "Bearer $token")
+            .get()
+            .build()
+        return kotlin.runCatching {
+            val response = client.newCall(request).execute()
             response.body!!.string()
         }
     }
