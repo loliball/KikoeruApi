@@ -154,6 +154,9 @@ object AsmrOneApi {
     fun vas(token: String, noCache: Boolean = false): Result<List<Va>> =
         request("$ASMR_BASE_URL/api/vas", token, noCache)
 
+    fun random(token: String, noCache: Boolean = false): Result<Works> =
+        request("$ASMR_BASE_URL/api/works?order=betterRandom", token, noCache)
+
     private inline fun <reified R> request(url: String, token: String, noCache: Boolean): Result<R> {
         val request = Request.Builder()
             .url(url)
