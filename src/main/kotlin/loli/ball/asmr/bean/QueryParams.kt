@@ -11,7 +11,7 @@ enum class WorksOrder {
     release,            //发布日期
     create_date,        //收录时间
     rating,             //评价
-    dl_count,           //发售时间
+    dl_count,           //下载量
     price,              //价格
     rate_average_2dp,   //评价
     review_count,       //评论数量

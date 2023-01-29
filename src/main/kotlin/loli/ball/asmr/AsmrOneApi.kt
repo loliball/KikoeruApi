@@ -88,7 +88,6 @@ object AsmrOneApi {
         return request(url, token, noCache)
     }
 
-    // 搜索
     fun search(
         token: String,
         page: Int,
@@ -99,7 +98,21 @@ object AsmrOneApi {
         subtitle: Boolean = false, // 是否有字幕
         noCache: Boolean = false
     ): Result<Works> {
-        val url0 = "$ASMR_BASE_URL/api/search/${keyword.toUrlEncoded()}"
+        return searchRaw(token, page, keyword.toUrlEncoded(), order, sort, seed, subtitle, noCache)
+    }
+
+    // 搜索
+    fun searchRaw(
+        token: String,
+        page: Int,
+        keyword: String,
+        order: WorksOrder = WorksOrder.create_date,
+        sort: QuerySort = QuerySort.desc,
+        seed: Int = (0..100).random(),
+        subtitle: Boolean = false, // 是否有字幕
+        noCache: Boolean = false
+    ): Result<Works> {
+        val url0 = "$ASMR_BASE_URL/api/search/$keyword"
         val url = url0.toHttpUrl().newBuilder().apply {
             addQueryParameter("order", order.name)
             addQueryParameter("sort", sort.name)
@@ -261,7 +274,12 @@ object AsmrOneApi {
         }
     }
 
-    private fun String.toUrlEncoded(): String = URLEncoder.encode(this, Charsets.UTF_8.displayName())
+    private fun String.toUrlEncoded(): String = URLEncoder
+        .encode(this, Charsets.UTF_8.displayName())
+        .replace("+", "%20")
+        .replace("%7E", "~")
+        .replace("%24", "$")
+        .replace("%3A", ":")
 
 }
 
