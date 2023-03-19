@@ -182,7 +182,6 @@ object AsmrOneApi {
         return runCatching {
             val response = client.newCall(request).execute()
             val bodyString = response.body!!.string()
-//            check(response.code == 200) { "http code ${response.code} $bodyString" }
             check(response.code == 200) { bodyString }
             json.decodeFromString(bodyString)
         }

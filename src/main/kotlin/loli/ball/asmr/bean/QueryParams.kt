@@ -9,7 +9,8 @@ enum class QuerySort {
 
 enum class WorksOrder {
     release,            //发布日期
-    create_date,        //收录时间
+    create_date,        //收录时间 asmr.one 专用
+    created_at,         //收录时间 其他kikoeru后端
     rating,             //评价
     dl_count,           //下载量
     price,              //价格

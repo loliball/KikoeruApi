@@ -22,7 +22,7 @@ data class Tag(
     val count: Int? = null,
     val id: Int?,
     val name: String?,
-    val i18n: I18n?
+    val i18n: I18n? = null
 ): QueryAble {
 
     @Serializable
