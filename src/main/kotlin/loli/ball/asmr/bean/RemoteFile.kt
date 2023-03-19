@@ -31,8 +31,8 @@ sealed class RemoteFile {
             override val workTitle: String,
             override val mediaStreamUrl: String,
             override val mediaDownloadUrl: String,
-            val streamLowQualityUrl: String,
-            val duration: Float
+            val streamLowQualityUrl: String? = null,
+            val duration: Float = 0f
         ) : File()
 
         @Serializable
