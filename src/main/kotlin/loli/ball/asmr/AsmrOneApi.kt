@@ -20,7 +20,7 @@ import java.net.URLEncoder
 
 object AsmrOneApi {
 
-    private const val ASMR_BASE_URL = "https://api.asmr.one"
+    var ASMR_BASE_URL = "https://api.asmr.one"
 
     var client = OkHttpClient()
 
