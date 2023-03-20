@@ -2,6 +2,7 @@ package loli.ball.asmr.bean
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import loli.ball.asmr.AsmrOneApi
 
 @Serializable
 sealed class RemoteFile {
@@ -22,6 +23,11 @@ sealed class RemoteFile {
         abstract val workTitle: String
         abstract val mediaStreamUrl: String
         abstract val mediaDownloadUrl: String
+
+        val url by lazy {
+            if (mediaDownloadUrl.startsWith("http")) mediaDownloadUrl
+            else AsmrOneApi.ASMR_BASE_URL + mediaDownloadUrl
+        }
 
         @Serializable
         @SerialName("audio")
