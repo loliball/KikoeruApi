@@ -1,6 +1,15 @@
 package loli.ball.asmr.bean
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import loli.ball.asmr.AsmrOneApi
 
 @Serializable
@@ -22,6 +31,7 @@ data class Work(
     val circle_id: Int,
     val create_date: String = "",
     val dl_count: Int,
+    @Serializable(with = MixedSerializer::class)
     val has_subtitle: Boolean = false,
     val id: Int,
     val mainCoverUrl: String? = null,
@@ -63,5 +73,20 @@ data class Work(
         val ratio: Int,
         val review_point: Int
     )
+
+}
+
+class MixedSerializer : KSerializer<Boolean> {
+
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("MixedSerializer")
+
+    override fun deserialize(decoder: Decoder): Boolean {
+        val element = (decoder as JsonDecoder).decodeJsonElement().jsonPrimitive
+        return element.booleanOrNull ?: (element.intOrNull != 0)
+    }
+
+    override fun serialize(encoder: Encoder, value: Boolean) {
+        encoder.encodeBoolean(value)
+    }
 
 }
