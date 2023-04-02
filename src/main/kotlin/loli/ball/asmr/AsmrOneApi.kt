@@ -11,6 +11,7 @@ import kotlinx.serialization.modules.subclass
 import loli.ball.asmr.bean.*
 import okhttp3.CacheControl
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -255,6 +256,23 @@ object AsmrOneApi {
             val response = client.newCall(request).execute().body!!.string()
             val lrcHash = Json.parseToJsonElement(response).jsonObject["hash"]?.jsonPrimitive?.content
             if (lrcHash.isNullOrEmpty()) null else lrcHash
+        }
+    }
+
+    fun checkLrc2(
+        token: String,
+        query: SubtitleQuery
+    ): Result<SubtitleList> {
+        val request = Request.Builder()
+            .url("$ASMR_BASE_URL/api/media/check-lrc-v2")
+            .header("authorization", "Bearer $token")
+            .post(Json.encodeToString(query).toRequestBody("application/json".toMediaType()))
+            .build()
+        return kotlin.runCatching {
+            val response = client.newCall(request).execute()
+            val bodyString = response.body!!.string()
+            check(response.code == 200) { bodyString }
+            json.decodeFromString(bodyString)
         }
     }
 
