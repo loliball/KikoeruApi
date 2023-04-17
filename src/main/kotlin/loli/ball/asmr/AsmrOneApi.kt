@@ -56,12 +56,12 @@ object AsmrOneApi {
         val newCall =
             client.newCall(Request.Builder().url(url).cacheControl(CacheControl.FORCE_NETWORK).post(body).build())
         return kotlin.runCatching {
-            val response = newCall.execute()
-//            check(response.code == 200) { "http code ${response.code}" }
-            val resp = response.body!!.string()
-            check(response.code == 200) { resp }
-            val json = Json.parseToJsonElement(resp).jsonObject
-            json["token"]?.jsonPrimitive?.content ?: error(resp)
+            newCall.execute().use { response ->
+                val resp = response.body!!.string()
+                check(response.code == 200) { resp }
+                val json = Json.parseToJsonElement(resp).jsonObject
+                json["token"]?.jsonPrimitive?.content ?: error(resp)
+            }
         }
     }
 
@@ -181,10 +181,11 @@ object AsmrOneApi {
             }
             .build()
         return runCatching {
-            val response = client.newCall(request).execute()
-            val bodyString = response.body!!.string()
-            check(response.code == 200) { bodyString }
-            json.decodeFromString(bodyString)
+            client.newCall(request).execute().use { response ->
+                val bodyString = response.body!!.string()
+                check(response.code == 200) { bodyString }
+                json.decodeFromString(bodyString)
+            }
         }
     }
 
@@ -219,10 +220,9 @@ object AsmrOneApi {
             .put(body)
             .build()
         return runCatching {
-            val response = client.newCall(request).execute()
-            val string = response.body!!.string()
-//            check(response.code == 200) { "http code ${response.code} $string" }
-            string
+            client.newCall(request).execute().use { response ->
+                response.body!!.string()
+            }
         }
     }
 
@@ -237,9 +237,9 @@ object AsmrOneApi {
             .delete()
             .build()
         return runCatching {
-            val response = client.newCall(request).execute()
-//            check(response.code == 200) { "http code ${response.code}" }
-            response.body!!.string()
+            client.newCall(request).execute().use { response ->
+                response.body!!.string()
+            }
         }
     }
 
@@ -253,7 +253,7 @@ object AsmrOneApi {
             .get()
             .build()
         return kotlin.runCatching {
-            val response = client.newCall(request).execute().body!!.string()
+            val response = client.newCall(request).execute().use { it.body!!.string() }
             val lrcHash = Json.parseToJsonElement(response).jsonObject["hash"]?.jsonPrimitive?.content
             if (lrcHash.isNullOrEmpty()) null else lrcHash
         }
@@ -269,10 +269,11 @@ object AsmrOneApi {
             .post(Json.encodeToString(query).toRequestBody("application/json".toMediaType()))
             .build()
         return kotlin.runCatching {
-            val response = client.newCall(request).execute()
-            val bodyString = response.body!!.string()
-            check(response.code == 200) { bodyString }
-            json.decodeFromString(bodyString)
+            client.newCall(request).execute().use { response ->
+                val bodyString = response.body!!.string()
+                check(response.code == 200) { bodyString }
+                json.decodeFromString(bodyString)
+            }
         }
     }
 
@@ -286,8 +287,9 @@ object AsmrOneApi {
             .get()
             .build()
         return kotlin.runCatching {
-            val response = client.newCall(request).execute()
-            response.body!!.string()
+            client.newCall(request).execute().use { response ->
+                response.body!!.string()
+            }
         }
     }
 
