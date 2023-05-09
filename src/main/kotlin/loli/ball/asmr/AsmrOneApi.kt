@@ -40,6 +40,21 @@ object AsmrOneApi {
         coerceInputValues = true
     }
 
+    fun health(assertResult: String = "OK"): Result<String> {
+        val url = "$ASMR_BASE_URL/api/health"
+        return kotlin.runCatching {
+            val request = Request.Builder()
+                .cacheControl(CacheControl.FORCE_NETWORK)
+                .url(url)
+                .build()
+            client.newCall(request).execute().use {
+                val result = it.body!!.string()
+                check(it.code == 200 && result == assertResult) { result }
+                result
+            }
+        }
+    }
+
     fun guestLogin() = login("guest", "guest")
 
     fun login(name: String, pwd: String) = loginOrRegister("$ASMR_BASE_URL/api/auth/me", name, pwd)
