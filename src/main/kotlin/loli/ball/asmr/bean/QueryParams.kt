@@ -27,8 +27,7 @@ enum class ReviewOrder {
     release,            //发布时间
     review_count,       //评论数量
     dl_count,           //售出数量
-    allage,             //全年龄新作
-    nsfw                //18x新作
+    nsfw                //年龄分级 (asc: sfw->nsfw)
 }
 
 enum class ListenState {
