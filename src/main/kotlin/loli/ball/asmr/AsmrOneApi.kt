@@ -2,6 +2,7 @@
 
 package loli.ball.asmr
 
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
@@ -291,6 +292,93 @@ object AsmrOneApi {
             }
         }
     }
+
+    fun worksV2(
+        token: String,
+        page: Int,
+        order: WorksOrder = WorksOrder.create_date,
+        sort: QuerySort = QuerySort.desc,
+        seed: Int = (0..100).random(),
+        subtitle: Boolean = false, // 是否有字幕
+        extra: QueryAble? = null, // 额外特殊的检索标签
+        noCache: Boolean = false,
+        localSubtitle: List<String> = listOf()
+    ): Result<Works> {
+        if (extra != null) {
+            return searchV2(token, page, keyword = extra.name(), order, sort, seed, subtitle, noCache, localSubtitle)
+        }
+        val params = WorksV2Params(page, order, sort, seed, if (subtitle) 1 else 0, localSubtitle)
+        val request = Request.Builder()
+            .url("$ASMR_BASE_URL/api/works")
+            .header("authorization", "Bearer $token")
+            .post(Json.encodeToString(params).toRequestBody("application/json".toMediaType()))
+            .let {
+                if (noCache) it.cacheControl(CacheControl.FORCE_NETWORK)
+                else it
+            }
+            .build()
+        return kotlin.runCatching {
+            client.newCall(request).execute().use { response ->
+                val bodyString = response.body!!.string()
+                check(response.code == 200) { bodyString }
+                json.decodeFromString(bodyString)
+            }
+        }
+    }
+
+    fun searchV2(
+        token: String,
+        page: Int,
+        keyword: String,
+        order: WorksOrder = WorksOrder.create_date,
+        sort: QuerySort = QuerySort.desc,
+        seed: Int = (0..100).random(),
+        subtitle: Boolean = false, // 是否有字幕
+        noCache: Boolean = false,
+        localSubtitle: List<String> = listOf()
+    ): Result<Works> {
+        return searchRawV2(token, page, keyword.toUrlEncoded(), order, sort, seed, subtitle, noCache, localSubtitle)
+    }
+
+    private fun searchRawV2(
+        token: String,
+        page: Int,
+        keyword: String,
+        order: WorksOrder = WorksOrder.create_date,
+        sort: QuerySort = QuerySort.desc,
+        seed: Int = (0..100).random(),
+        subtitle: Boolean = false, // 是否有字幕
+        noCache: Boolean = false,
+        localSubtitle: List<String> = listOf()
+    ): Result<Works> {
+        val params = WorksV2Params(page, order, sort, seed, if (subtitle) 1 else 0, localSubtitle)
+        val request = Request.Builder()
+            .url("$ASMR_BASE_URL/api/search/$keyword")
+            .header("authorization", "Bearer $token")
+            .post(Json.encodeToString(params).toRequestBody("application/json".toMediaType()))
+            .let {
+                if (noCache) it.cacheControl(CacheControl.FORCE_NETWORK)
+                else it
+            }
+            .build()
+        return kotlin.runCatching {
+            client.newCall(request).execute().use { response ->
+                val bodyString = response.body!!.string()
+                check(response.code == 200) { bodyString }
+                json.decodeFromString(bodyString)
+            }
+        }
+    }
+
+    @Serializable
+    private data class WorksV2Params(
+        val page: Int,
+        val order: WorksOrder,
+        val sort: QuerySort,
+        val seed: Int,
+        val subtitle: Int,
+        val localSubtitledWorks: List<String>
+    )
 
     fun downloadLrc(
         token: String,
