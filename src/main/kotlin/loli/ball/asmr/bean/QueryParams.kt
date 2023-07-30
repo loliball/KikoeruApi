@@ -37,3 +37,9 @@ enum class ListenState {
     replay,             //重听
     postponed           //搁置
 }
+
+enum class PlaylistFilter {
+    all,
+    owned,
+    liked
+}

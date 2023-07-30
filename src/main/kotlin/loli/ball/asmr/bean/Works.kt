@@ -6,10 +6,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 import loli.ball.asmr.AsmrOneApi
 
 @Serializable
@@ -18,7 +15,7 @@ data class Works(
     val works: List<Work>
 )
 
-@Serializable
+@Serializable(with = PageSerializer::class)
 data class Pagination(
     val currentPage: Int,
     val pageSize: Int,
@@ -87,6 +84,28 @@ class MixedSerializer : KSerializer<Boolean> {
 
     override fun serialize(encoder: Encoder, value: Boolean) {
         encoder.encodeBoolean(value)
+    }
+
+}
+
+class PageSerializer : KSerializer<Pagination> {
+
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("PPP")
+
+    override fun deserialize(decoder: Decoder): Pagination {
+        val obj = (decoder as JsonDecoder).decodeJsonElement().jsonObject
+        val page = (obj["currentPage"] ?: obj["page"])!!.jsonPrimitive.int
+        val pageSize = obj["pageSize"]!!.jsonPrimitive.int
+        val totalCount = obj["totalCount"]!!.jsonPrimitive.int
+        return Pagination(page, pageSize, totalCount)
+    }
+
+    override fun serialize(encoder: Encoder, value: Pagination) {
+        encoder.encodeSerializableValue(JsonObject.serializer(), buildJsonObject {
+            put("currentPage", value.currentPage)
+            put("pageSize", value.pageSize)
+            put("totalCount", value.totalCount)
+        })
     }
 
 }

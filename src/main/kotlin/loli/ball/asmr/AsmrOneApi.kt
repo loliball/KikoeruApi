@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "LocalVariableName", "PropertyName")
 
 package loli.ball.asmr
 
@@ -205,6 +205,30 @@ object AsmrOneApi {
         }
     }
 
+    private inline fun <reified R, reified I> requestPost(
+        url: String,
+        token: String,
+        body: I,
+        noCache: Boolean = false,
+    ): Result<R> {
+        val request = Request.Builder()
+            .url(url)
+            .header("authorization", "Bearer $token")
+            .post(Json.encodeToString(body).toRequestBody("application/json".toMediaType()))
+            .let {
+                if (noCache) it.cacheControl(CacheControl.FORCE_NETWORK)
+                else it
+            }
+            .build()
+        return runCatching {
+            client.newCall(request).execute().use { response ->
+                val bodyString = response.body!!.string()
+                check(response.code == 200) { bodyString }
+                json.decodeFromString(bodyString)
+            }
+        }
+    }
+
     fun editState(
         token: String,
         progress: ListenState? = null,
@@ -279,18 +303,7 @@ object AsmrOneApi {
         token: String,
         query: SubtitleQuery
     ): Result<SubtitleList> {
-        val request = Request.Builder()
-            .url("$ASMR_BASE_URL/api/media/check-lrc-v2")
-            .header("authorization", "Bearer $token")
-            .post(Json.encodeToString(query).toRequestBody("application/json".toMediaType()))
-            .build()
-        return kotlin.runCatching {
-            client.newCall(request).execute().use { response ->
-                val bodyString = response.body!!.string()
-                check(response.code == 200) { bodyString }
-                json.decodeFromString(bodyString)
-            }
-        }
+        return requestPost("$ASMR_BASE_URL/api/media/check-lrc-v2", token, query)
     }
 
     fun worksV2(
@@ -308,22 +321,7 @@ object AsmrOneApi {
             return searchV2(token, page, keyword = extra.name(), order, sort, seed, subtitle, noCache, localSubtitle)
         }
         val params = WorksV2Params(page, order, sort, seed, if (subtitle) 1 else 0, localSubtitle)
-        val request = Request.Builder()
-            .url("$ASMR_BASE_URL/api/works")
-            .header("authorization", "Bearer $token")
-            .post(Json.encodeToString(params).toRequestBody("application/json".toMediaType()))
-            .let {
-                if (noCache) it.cacheControl(CacheControl.FORCE_NETWORK)
-                else it
-            }
-            .build()
-        return kotlin.runCatching {
-            client.newCall(request).execute().use { response ->
-                val bodyString = response.body!!.string()
-                check(response.code == 200) { bodyString }
-                json.decodeFromString(bodyString)
-            }
-        }
+        return requestPost("$ASMR_BASE_URL/api/works", token, params, noCache)
     }
 
     fun searchV2(
@@ -352,22 +350,7 @@ object AsmrOneApi {
         localSubtitle: List<String> = listOf()
     ): Result<Works> {
         val params = WorksV2Params(page, order, sort, seed, if (subtitle) 1 else 0, localSubtitle)
-        val request = Request.Builder()
-            .url("$ASMR_BASE_URL/api/search/$keyword")
-            .header("authorization", "Bearer $token")
-            .post(Json.encodeToString(params).toRequestBody("application/json".toMediaType()))
-            .let {
-                if (noCache) it.cacheControl(CacheControl.FORCE_NETWORK)
-                else it
-            }
-            .build()
-        return kotlin.runCatching {
-            client.newCall(request).execute().use { response ->
-                val bodyString = response.body!!.string()
-                check(response.code == 200) { bodyString }
-                json.decodeFromString(bodyString)
-            }
-        }
+        return requestPost("$ASMR_BASE_URL/api/search/$keyword", token, params, noCache)
     }
 
     @Serializable
@@ -403,5 +386,163 @@ object AsmrOneApi {
         .replace("%24", "$")
         .replace("%3A", ":")
 
-}
+    fun playlist(
+        token: String,
+        page: Int = 1,
+        pageSize: Int = 12,
+        filterBy: PlaylistFilter = PlaylistFilter.all,
+        noCache: Boolean = false
+    ): Result<PlayLists> {
+        val url = "$ASMR_BASE_URL/api/playlist/get-playlists".toHttpUrl().newBuilder()
+            .addQueryParameter("page", page.toString())
+            .addQueryParameter("pageSize", pageSize.toString())
+            .addQueryParameter("filterBy", filterBy.name)
+            .build()
+            .toString()
+        return request(url, token, noCache)
+    }
 
+    fun playlistWorks(
+        token: String,
+        id: String,
+        page: Int = 1,
+        pageSize: Int = 12,
+        noCache: Boolean = false
+    ): Result<Works> {
+        val url = "$ASMR_BASE_URL/api/playlist/get-playlist-works".toHttpUrl().newBuilder()
+            .addQueryParameter("page", page.toString())
+            .addQueryParameter("pageSize", pageSize.toString())
+            .addQueryParameter("id", id)
+            .build()
+            .toString()
+        return request(url, token, noCache)
+    }
+
+    fun playlistMetadata(
+        token: String,
+        id: String,
+        noCache: Boolean = false
+    ): Result<PlayList> {
+        val url = "$ASMR_BASE_URL/api/playlist/get-playlist-metadata".toHttpUrl().newBuilder()
+            .addQueryParameter("id", id)
+            .build()
+            .toString()
+        return request(url, token, noCache)
+    }
+
+    fun playlistCreate(
+        token: String,
+        name: String,
+        privacy: Int = 2, // 0 public, 1 url, 2 private
+        locale: String = "zh-CN",
+        description: String = "",
+        works: List<String> = emptyList()
+    ): Result<PlayList> {
+        val params = buildJsonObject {
+            put("name", name)
+            put("privacy", privacy)
+            put("locale", locale)
+            put("description", description)
+            put("works", JsonArray(works.map { JsonPrimitive(it) }))
+        }
+        return requestPost("$ASMR_BASE_URL/api/playlist/create-playlist", token, params)
+    }
+
+    fun playlistMetadataEdit(
+        token: String,
+        playlist: PlayList
+    ): Result<PlayList> {
+        return playlistMetadataEdit(token, playlist.id, playlist.name, playlist.privacy, playlist.description)
+    }
+
+    fun playlistMetadataEdit(
+        token: String,
+        id: String,
+        name: String,
+        privacy: Int,
+        description: String
+    ): Result<PlayList> {
+        val params = buildJsonObject {
+            put("id", id)
+            putJsonObject("data") {
+                put("name", name)
+                put("privacy", privacy)
+                put("description", description)
+            }
+        }
+        return requestPost("$ASMR_BASE_URL/api/playlist/edit-playlist-metadata", token, params)
+    }
+
+    fun playlistDelete(
+        token: String,
+        id: String
+    ): Result<PlaylistBean> {
+        return requestPost("$ASMR_BASE_URL/api/playlist/delete-playlist", token, PlaylistBean(id))
+    }
+
+    @Serializable
+    data class PlaylistBean(val id: String)
+
+    fun playlistCheck(
+        token: String,
+        workID: Int,
+        page: Int = 1,
+        pageSize: Int = 12,
+        noCache: Boolean = false
+    ): Result<PlayLists> {
+        val url = "$ASMR_BASE_URL/api/playlist/get-work-exist-status-in-my-playlists".toHttpUrl().newBuilder()
+            .addQueryParameter("page", page.toString())
+            .addQueryParameter("pageSize", pageSize.toString())
+            .addQueryParameter("id", workID.toString())
+            .addQueryParameter("version", "2")
+            .build()
+            .toString()
+        return request(url, token, noCache)
+    }
+
+    // TODO /api/playlist/get-default-mark-target-playlist
+    // TODO /api/playlist/get-liked-status
+
+    fun playlistAdd(
+        token: String,
+        playlistId: String,
+        works: List<String>
+    ) :Result<PlaylistBean> {
+        val url = "$ASMR_BASE_URL/api/playlist/add-works-to-playlist"
+        val body = buildJsonObject {
+            put("id", playlistId)
+            put("works", JsonArray(works.map { JsonPrimitive(it) }))
+        }
+        return requestPost(url, token, body)
+    }
+
+    fun playlistRemove(
+        token: String,
+        playlistId: String,
+        works: List<String>
+    ) :Result<PlaylistBean> {
+        val url = "$ASMR_BASE_URL/api/playlist/remove-works-to-playlist"
+        val body = buildJsonObject {
+            put("id", playlistId)
+            put("works", JsonArray(works.map { JsonPrimitive(it) }))
+        }
+        return requestPost(url, token, body)
+    }
+
+    fun playlistFavorite(
+        token: String,
+        playlistId: String
+    ) :Result<PlaylistBean> {
+        val url = "$ASMR_BASE_URL/api/playlist/like-playlist"
+        return requestPost(url, token, PlaylistBean(playlistId))
+    }
+
+    fun playlistUnFavorite(
+        token: String,
+        playlistId: String
+    ) :Result<PlaylistBean> {
+        val url = "$ASMR_BASE_URL/api/playlist/remove-like-playlist"
+        return requestPost(url, token, PlaylistBean(playlistId))
+    }
+
+}
