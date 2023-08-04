@@ -481,7 +481,7 @@ object AsmrOneApi {
     }
 
     @Serializable
-    data class PlaylistBean(val id: String)
+    data class PlaylistBean(val id: String, val liked: Boolean = false)
 
     fun playlistCheck(
         token: String,
@@ -501,13 +501,17 @@ object AsmrOneApi {
     }
 
     // TODO /api/playlist/get-default-mark-target-playlist
-    // TODO /api/playlist/get-liked-status
+
+    fun playlistStatus(token: String, playlistId: String, noCache: Boolean = false): Result<PlaylistBean> {
+        val url = "$ASMR_BASE_URL/api/playlist/get-liked-status?id=$playlistId"
+        return request(url, token, noCache)
+    }
 
     fun playlistAdd(
         token: String,
         playlistId: String,
         works: List<String>
-    ) :Result<PlaylistBean> {
+    ): Result<PlaylistBean> {
         val url = "$ASMR_BASE_URL/api/playlist/add-works-to-playlist"
         val body = buildJsonObject {
             put("id", playlistId)
@@ -520,7 +524,7 @@ object AsmrOneApi {
         token: String,
         playlistId: String,
         works: List<String>
-    ) :Result<PlaylistBean> {
+    ): Result<PlaylistBean> {
         val url = "$ASMR_BASE_URL/api/playlist/remove-works-to-playlist"
         val body = buildJsonObject {
             put("id", playlistId)
@@ -532,7 +536,7 @@ object AsmrOneApi {
     fun playlistFavorite(
         token: String,
         playlistId: String
-    ) :Result<PlaylistBean> {
+    ): Result<PlaylistBean> {
         val url = "$ASMR_BASE_URL/api/playlist/like-playlist"
         return requestPost(url, token, PlaylistBean(playlistId))
     }
@@ -540,7 +544,7 @@ object AsmrOneApi {
     fun playlistUnFavorite(
         token: String,
         playlistId: String
-    ) :Result<PlaylistBean> {
+    ): Result<PlaylistBean> {
         val url = "$ASMR_BASE_URL/api/playlist/remove-like-playlist"
         return requestPost(url, token, PlaylistBean(playlistId))
     }
