@@ -525,7 +525,7 @@ object AsmrOneApi {
         playlistId: String,
         works: List<String>
     ): Result<PlaylistBean> {
-        val url = "$ASMR_BASE_URL/api/playlist/remove-works-to-playlist"
+        val url = "$ASMR_BASE_URL/api/playlist/remove-works-from-playlist"
         val body = buildJsonObject {
             put("id", playlistId)
             put("works", JsonArray(works.map { JsonPrimitive(it) }))
