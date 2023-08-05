@@ -41,8 +41,8 @@ object AsmrOneApi {
         coerceInputValues = true
     }
 
-    fun health(assertResult: String = "OK"): Result<String> {
-        val url = "$ASMR_BASE_URL/api/health"
+    fun health(domain: String = ASMR_BASE_URL, assertResult: String = "OK"): Result<String> {
+        val url = "$domain/api/health"
         return kotlin.runCatching {
             val request = Request.Builder()
                 .cacheControl(CacheControl.FORCE_NETWORK)
