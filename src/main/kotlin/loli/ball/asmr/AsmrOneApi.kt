@@ -485,7 +485,7 @@ object AsmrOneApi {
 
     fun playlistCheck(
         token: String,
-        workID: Int,
+        workID: String,
         page: Int = 1,
         pageSize: Int = 12,
         noCache: Boolean = false
@@ -493,7 +493,7 @@ object AsmrOneApi {
         val url = "$ASMR_BASE_URL/api/playlist/get-work-exist-status-in-my-playlists".toHttpUrl().newBuilder()
             .addQueryParameter("page", page.toString())
             .addQueryParameter("pageSize", pageSize.toString())
-            .addQueryParameter("id", workID.toString())
+            .addQueryParameter("id", workID)
             .addQueryParameter("version", "2")
             .build()
             .toString()
