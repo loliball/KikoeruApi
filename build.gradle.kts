@@ -25,7 +25,6 @@ publishing {
 dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.10.0")
-    implementation("org.jsoup:jsoup:1.15.4")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
     testImplementation(kotlin("test"))
 }
