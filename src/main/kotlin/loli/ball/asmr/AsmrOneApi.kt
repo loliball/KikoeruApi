@@ -333,9 +333,11 @@ object AsmrOneApi {
         seed: Int = (0..100).random(),
         subtitle: Boolean = false, // 是否有字幕
         noCache: Boolean = false,
-        localSubtitle: List<String> = listOf()
+        localSubtitle: List<String> = listOf(),
+        includeTranslationWorks: Boolean = false
     ): Result<Works> {
-        return searchRawV2(token, page, keyword.toUrlEncoded(), order, sort, seed, subtitle, noCache, localSubtitle)
+        return searchRawV2(token, page, keyword.toUrlEncoded(), order, sort, seed, subtitle,
+            noCache, localSubtitle, includeTranslationWorks)
     }
 
     private fun searchRawV2(
@@ -347,9 +349,11 @@ object AsmrOneApi {
         seed: Int = (0..100).random(),
         subtitle: Boolean = false, // 是否有字幕
         noCache: Boolean = false,
-        localSubtitle: List<String> = listOf()
+        localSubtitle: List<String> = listOf(),
+        includeTranslationWorks: Boolean = false
     ): Result<Works> {
-        val params = WorksV2Params(page, order, sort, seed, if (subtitle) 1 else 0, localSubtitle)
+        val subtitleBoolean = if (subtitle) 1 else 0
+        val params = WorksV2Params(page, order, sort, seed, subtitleBoolean, localSubtitle, includeTranslationWorks)
         return requestPost("$ASMR_BASE_URL/api/search/$keyword", token, params, noCache)
     }
 
@@ -360,7 +364,8 @@ object AsmrOneApi {
         val sort: QuerySort,
         val seed: Int,
         val subtitle: Int,
-        val localSubtitledWorks: List<String>
+        val localSubtitledWorks: List<String>,
+        val includeTranslationWorks: Boolean = false
     )
 
     fun downloadLrc(
