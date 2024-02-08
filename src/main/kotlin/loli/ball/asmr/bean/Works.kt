@@ -50,7 +50,8 @@ data class Work(
     val userRating: Int? = null,
     val vas: List<Va>,
     val user_name: String? = null,
-    val updated_at: String? = null
+    val updated_at: String? = null,
+    val age_category_string: String? = null
 ) {
 
     // need token!
@@ -70,6 +71,10 @@ data class Work(
         val ratio: Int,
         val review_point: Int
     )
+
+    enum class AgeCategory {
+        adult, general, r15
+    }
 
 }
 
