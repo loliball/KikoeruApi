@@ -51,7 +51,9 @@ data class Work(
     val vas: List<Va>,
     val user_name: String? = null,
     val updated_at: String? = null,
-    val age_category_string: String? = null
+    val age_category_string: String? = null,
+    val original_workno: String? = null,
+    val other_language_editions_in_db: List<OtherWork>? = null
 ) {
 
     // need token!
@@ -75,6 +77,14 @@ data class Work(
     enum class AgeCategory {
         adult, general, r15
     }
+
+    @Serializable
+    data class OtherWork(
+        val id: Int,
+        val lang: String,
+        val title: String,
+        val is_original: Boolean
+    )
 
 }
 
