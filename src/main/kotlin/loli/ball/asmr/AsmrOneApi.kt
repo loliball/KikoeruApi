@@ -223,7 +223,6 @@ object AsmrOneApi {
         return runCatching {
             client.newCall(request).execute().use { response ->
                 val bodyString = response.body!!.string()
-                println(bodyString)
                 check(response.code == 200) { bodyString }
                 json.decodeFromString(bodyString)
             }

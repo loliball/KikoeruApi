@@ -53,7 +53,8 @@ data class Work(
     val updated_at: String? = null,
     val age_category_string: String? = null,
     val original_workno: String? = null,
-    val other_language_editions_in_db: List<OtherWork>? = null
+    val other_language_editions_in_db: List<OtherWork>? = null,
+    val work_attributes: String? = null
 ) {
 
     // need token!
