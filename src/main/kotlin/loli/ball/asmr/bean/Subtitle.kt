@@ -16,7 +16,7 @@ data class Subtitle(
 
 @Serializable
 data class SubtitleQuery(
-    val intProductID: Int,
+    val intProductID: Long,
     val mediaDuration: Float,
     val mediaFileName: String
 )
