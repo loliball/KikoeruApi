@@ -283,21 +283,8 @@ object AsmrOneApi {
         }
     }
 
-    fun checkLrc(
-        token: String,
-        hash: String
-    ): Result<String?> {
-        val request = Request.Builder()
-            .url("$ASMR_BASE_URL/api/media/check-lrc/$hash")
-            .header("authorization", "Bearer $token")
-            .get()
-            .build()
-        return kotlin.runCatching {
-            val response = client.newCall(request).execute().use { it.body!!.string() }
-            val lrcHash = Json.parseToJsonElement(response).jsonObject["hash"]?.jsonPrimitive?.content
-            if (lrcHash.isNullOrEmpty()) null else lrcHash
-        }
-    }
+    fun checkLrc(token: String, hash: String): Result<LrcResult> =
+        request("$ASMR_BASE_URL/api/media/check-lrc/$hash", token, false)
 
     fun checkLrc2(
         token: String,
@@ -336,8 +323,10 @@ object AsmrOneApi {
         localSubtitle: List<String> = listOf(),
         includeTranslationWorks: Boolean = false
     ): Result<Works> {
-        return searchRawV2(token, page, keyword.toUrlEncoded(), order, sort, seed, subtitle,
-            noCache, localSubtitle, includeTranslationWorks)
+        return searchRawV2(
+            token, page, keyword.toUrlEncoded(), order, sort, seed, subtitle,
+            noCache, localSubtitle, includeTranslationWorks
+        )
     }
 
     private fun searchRawV2(
