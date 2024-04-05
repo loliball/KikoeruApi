@@ -161,15 +161,15 @@ object AsmrOneApi {
     }
 
     // 不带个人信息 RJ号直达
-    fun workInfo(token: String, id: Int, noCache: Boolean = false): Result<Work> =
+    fun workInfo(token: String, id: Long, noCache: Boolean = false): Result<Work> =
         request("$ASMR_BASE_URL/api/workInfo/$id", token, noCache)
 
     // 带个人信息 RJ号直达
-    fun work(token: String, id: Int, noCache: Boolean = false): Result<Work> =
+    fun work(token: String, id: Long, noCache: Boolean = false): Result<Work> =
         request("$ASMR_BASE_URL/api/work/$id", token, noCache)
 
     // 详细目录 RJ号直达
-    fun tracks(token: String, id: Int, noCache: Boolean = false): Result<List<RemoteFile>> =
+    fun tracks(token: String, id: Long, noCache: Boolean = false): Result<List<RemoteFile>> =
         request("$ASMR_BASE_URL/api/tracks/$id", token, noCache)
 
     // 社团
@@ -235,7 +235,7 @@ object AsmrOneApi {
         rating: Int? = null,
         review_text: String? = null,
         user_name: String,
-        work_id: Int
+        work_id: Long
     ): Result<String> {
         if (progress == null && rating == null && review_text == null) {
             error("progress, rating, review_text all null")
@@ -268,7 +268,7 @@ object AsmrOneApi {
 
     fun deleteMark(
         token: String,
-        work_id: Int
+        work_id: Long
     ): Result<String> {
         val request = Request.Builder()
             .url("$ASMR_BASE_URL/api/review?work_id=$work_id")
@@ -490,7 +490,7 @@ object AsmrOneApi {
 
     fun playlistCheck(
         token: String,
-        workID: Int,
+        workID: Long,
         page: Int = 1,
         pageSize: Int = 12,
         noCache: Boolean = false

@@ -85,7 +85,7 @@ data class Work(
 
     @Serializable
     data class OtherWork(
-        val id: Int,
+        val id: Long,
         val lang: String,
         val title: String,
         val is_original: Boolean
