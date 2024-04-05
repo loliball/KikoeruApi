@@ -30,7 +30,7 @@ data class Work(
     val dl_count: Int,
     @Serializable(with = MixedSerializer::class)
     val has_subtitle: Boolean = false,
-    val id: Int,
+    val id: Long,
     val mainCoverUrl: String? = null,
     val samCoverUrl: String? = null,
     val thumbnailCoverUrl: String? = null,
